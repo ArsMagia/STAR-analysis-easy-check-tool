@@ -9,6 +9,12 @@ import re
 import platform
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
+from logger_config import get_logger
+from keyword_optimizer import KeywordSearchOptimizer, AdvancedKeywordMatcher
+from config_manager import config_manager
+
+# ロガー初期化
+logger = get_logger('analyzer')
 
 # 形態素解析ライブラリの導入（Janome専用）
 MORPHOLOGICAL_ANALYZER = None
@@ -19,10 +25,10 @@ try:
     from janome.tokenizer import Tokenizer
     MORPHOLOGICAL_ANALYZER = "janome"
     ANALYZER_TYPE = "modern"
-    pass  # Janome形態素解析を使用
+    logger.info("Janome形態素解析エンジンを使用します")
 except ImportError:
     ANALYZER_TYPE = "basic"
-    pass  # 基本分析機能のみ使用
+    logger.warning("Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome")
 
 @dataclass
 class AnalysisResult:
@@ -39,6 +45,11 @@ class AnalysisResult:
     morphological_analysis: Optional[List[Dict]] = None
     emotion_intensity: float = 0.0
     detected_pos_tags: List[str] = None
+    
+    # 複数カテゴリ検出機能
+    is_multiple_categories: bool = False
+    secondary_categories: List[str] = None
+    category_ambiguity_score: float = 0.0
 
 class STARAnalyzer:
     """STAR分析エンジン"""
@@ -46,6 +57,11 @@ class STARAnalyzer:
     def __init__(self):
         # キーワード辞書と設定の初期化
         self._setup_keywords_and_config()
+        
+        # キーワード検索最適化エンジンの初期化
+        self.keyword_optimizer = KeywordSearchOptimizer(self.keywords)
+        self.advanced_matcher = AdvancedKeywordMatcher(self.keyword_optimizer)
+        logger.info("キーワード検索最適化エンジンを初期化しました")
         
         # 形態素解析器の初期化
         self.morphological_analyzer = None
@@ -55,7 +71,7 @@ class STARAnalyzer:
             self.morphological_analyzer = self._initialize_janome()
         else:
             self.morphological_analyzer = None
-            pass  # 基本分析機能のみ使用
+            logger.info("基本分析モードで動作します")
     
     def _initialize_janome(self):
         """Janome形態素解析器の初期化"""
@@ -64,213 +80,197 @@ class STARAnalyzer:
             # 簡単なテスト実行
             test_result = list(tokenizer.tokenize("テスト", wakati=True))
             if test_result:
-                pass  # Janome初期化成功
+                logger.debug("Janome形態素解析器の初期化に成功しました")
                 return tokenizer
             else:
-                pass  # Janome初期化失敗
+                logger.error("Janome初期化失敗: テスト解析が失敗しました")
                 return None
         except Exception as e:
-            pass  # Janome初期化エラー
+            logger.error(f"Janome初期化エラー: {e}")
             return None
     
     def _setup_keywords_and_config(self):
-        """キーワード辞書と設定の初期化"""
-        # STAR理論原典に基づく実感の形容表現と分析要素
+        """キーワード辞書と設定の初期化（外部ファイルから読み込み）"""
+        try:
+            # 外部設定ファイルから読み込み
+            self.keywords = config_manager.get_keywords()
+            self.intensity_words = config_manager.get_intensity_words()
+            self.context_weights = config_manager.get_context_weights()
+            self.negation_patterns = config_manager.get_negation_patterns()
+            
+            logger.info(f"設定を外部ファイルから読み込み完了: {len(self.keywords)}カテゴリ")
+            
+        except Exception as e:
+            logger.error(f"設定読み込みエラー: {e}")
+            self._setup_fallback_config()
+    
+    def _setup_fallback_config(self):
+        """フォールバック設定（最小限）"""
+        logger.warning("フォールバック設定を使用します")
         self.keywords = {
-            'SENSE': {
-                'feeling_expressions': [
-                    # 原典の基本表現（最重要）
-                    'きれい', 'おいしい', '気持ちいい', 'かぐわしい',
-                    # 基本表現の表記バリエーション
-                    '綺麗', '美しい', '美味しい', '美味い', 'うまい', '心地よい', 'いい匂い',
-                    # 五感の基本的感覚表現（原典のサブカテゴリに準拠）
-                    'さっぱり', 'すっきり', '香ばしい', '鮮やか', '明るい', '温かい', '冷たい',
-                    '柔らかい', '滑らか', '静か', '澄んだ', '清潔', '新鮮', '爽快'
-                ],
-                'objects': [
-                    # 原典サブカテゴリに基づく対象（美、味、匂い、触、心地よさ）
-                    '美', '味', '匂い', '触覚', '音', '心地よさ',
-                    # 五感の具体的対象
-                    '景色', '風景', '色', '花', '料理', '食べ物', '飲み物', '香り',
-                    '肌触り', '質感', '音楽', '声', '自然音'
-                ],
-                'perceptual_verbs': [
-                    # 原典の知覚動詞（SV型感動事象用）
-                    '見る', '聞く', '味わう', '触る', '嗅ぐ', '感じる',
-                    # 基本的なバリエーション
-                    '見つめる', '眺める', '聴く', '食べる', '飲む', '触れる'
-                ],
-                'subcategories': ['美', '味', '匂い', '触', '心地よさ']
-            },
-            'THINK': {
-                'feeling_expressions': [
-                    # 原典の基本表現（最重要）
-                    'わかった', 'なるほど', 'すごい',
-                    # 基本表現のバリエーション
-                    'へー', '知らなかった', '面白い', '理解できた', '納得', '発見した', 
-                    '気づいた', '勉強になる', '解けた', '興味深い', 
-                    # 知見拡大に関する表現
-                    '判明した', 'ひらめいた', '学んだ', '覚えた', '驚いた', 'びっくりした',
-                    '目から鱗', '想像以上', '意外', '新しい発見'
-                ],
-                'objects': [
-                    # 原典サブカテゴリに基づく対象（理解、発見、納得、圧倒、学習、気づき）
-                    '理解', '発見', '納得', '圧倒', '学習', '気づき',
-                    # 知見拡大の具体的対象
-                    '知識', '情報', '事実', '真実', '問題', '課題', '謎', '疑問', '答え',
-                    '解決策', '方法', 'コツ', '仕組み', '原理', 'アイデア'
-                ],
-                'cognitive_verbs': [
-                    # 原典の認知動詞（SV型感動事象用）
-                    '理解する', '発見する', '学ぶ', '気づく', '知る',
-                    # 基本的なバリエーション
-                    'わかる', '解く', '解ける', '覚える', '見つける', '察する'
-                ],
-                'subcategories': ['理解', '納得', '発見', '圧倒']
-            },
-            'ACT': {
-                'feeling_expressions': [
-                    # 原典の基本表現（最重要）
-                    'できた', 'やった', 'よかった', 'すごい',
-                    # 体験拡大に関する基本表現
-                    '達成', '成長', '頑張った', '成功', '完走', 'クリア', '突破', '進歩',
-                    # 体験拡大のバリエーション
-                    '成功した', '達成した', '完成した', '完走した', '突破した', '挑戦した',
-                    '努力した', '成長した', '進歩した', '上達した', '体験した', '経験した',
-                    '満足した', '充実した', '特別だった', '貴重だった', '幸運だった'
-                ],
-                'objects': [
-                    # 原典サブカテゴリに基づく対象（努力、上達、進歩、達成、挑戦、経験、成功、特別感、稀有、遭遇、幸運）
-                    '努力', '上達', '進歩', '達成', '挑戦', '経験', '成功', '完走', '成長',
-                    '特別感', '稀有', '遭遇', '幸運',
-                    # 体験拡大の具体的対象
-                    '活動', '行動', '実践', 'トライ', '試み', '取り組み', '体験', '出来事',
-                    '機会', 'チャンス', '価値', '意義', 'やりがい', '充実感', '満足感'
-                ],
-                'action_verbs': [
-                    # 原典の行為動詞（SOV型感動事象用）
-                    '頑張る', '挑戦する', '達成する', '成長する', '経験する',
-                    # 基本的なバリエーション
-                    '完走する', 'クリアする', '突破する', '努力する', '成功する',
-                    '体験する', '乗り越える'
-                ],
-                'subcategories': ['努力', '上達', '成長', '進歩', '達成', '特別感', '稀有', '遭遇', '幸運']
-            },
-            'RELATE': {
-                'feeling_expressions': [
-                    # 原典の基本表現（最重要）
-                    'すばらしい', 'ありがたい', '一緒だ',
-                    # 関係性拡大に関する基本表現
-                    'うれしい', '愛おしい', '温かい', 'つながり', '感謝', '愛情', '絆', '支え',
-                    # 関係性拡大のバリエーション
-                    '感謝している', '助かった', '救われた', '支えられた', '共感する',
-                    '理解される', '心が通う', '親近感を覚える', 'やさしい', '思いやりがある',
-                    '尊敬する', '認められる', '褒められる', '安らぎがある'
-                ],
-                'objects': [
-                    # 原典サブカテゴリに基づく対象（愛、絆、感謝、共感、支援、協力、理解、やさしさ、親近感、愛着、調和、一体感、承認、尊敬）
-                    '愛', '絆', '感謝', '共感', '支援', '協力', '理解', '友情', '家族',
-                    'やさしさ', '親近感', '愛着', '調和', '一体感', '承認', '尊敬',
-                    # 関係性拡大の具体的対象
-                    '愛情', '思いやり', '優しさ', '温かさ', '心', 'つながり', '関係',
-                    '友達', '仲間', '恩', '人情', '情', '同情', 'お礼', '謝意'
-                ],
-                'relationship_verbs': [
-                    # 原典の関係動詞（SOV型感動事象用）
-                    '助ける', '支える', '共感する', '愛する', '感謝する',
-                    # 基本的なバリエーション
-                    '励ます', '応援する', '理解する', '受け入れる', '協力する',
-                    '思いやる', '気遣う', '認める', '褒める', '尊敬する'
-                ],
-                'subcategories': ['愛', 'つながり', 'やさしさ', '親近感', '愛着', '調和', '一体感', '感謝', '承認', '尊敬']
-            }
+            'SENSE': {'feeling_expressions': ['おいしい', '美しい', '気持ちいい']},
+            'THINK': {'feeling_expressions': ['なるほど', 'わかった', 'すごい']},
+            'ACT': {'feeling_expressions': ['できた', '達成', '成功']},
+            'RELATE': {'feeling_expressions': ['感謝', '一緒', '温かい']}
         }
-        
-        # 感動表現の強度
-        self.intensity_words = {
-            '非常に': 2.0, 'とても': 1.8, 'すごく': 1.7, '本当に': 1.5, 
-            'かなり': 1.3, 'まあまあ': 0.8, '少し': 0.6, 'ちょっと': 0.5
-        }
-        
-        # 文脈重み付けシステム
-        self.context_weights = {
-            # 同一カテゴリ内での重複強化
-            'same_category_bonus': 1.3,
-            # 異なるカテゴリでの競合時の調整
-            'cross_category_penalty': 0.9,
-            # 文型との一致度による重み
-            'sentence_type_match_bonus': 1.2,
-            'sentence_type_mismatch_penalty': 0.8
-        }
-        
-        # 否定表現パターン
-        self.negation_patterns = [
-            'ない', 'なかった', 'ません', 'ませんでした',
-            'じゃない', 'ではない', 'くない', 'ではなかった'
-        ]
+        self.intensity_words = {'本当に': 1.5, 'とても': 1.3, 'すごく': 1.4}
+        self.context_weights = {'sentence_type_match_bonus': 1.3, 'negation_penalty': 0.4}
+        self.negation_patterns = ['ない', 'ません', 'じゃない']
 
     def analyze(self, text: str) -> AnalysisResult:
         """メイン分析メソッド"""
-        # 前処理
-        text = self._preprocess(text)
+        try:
+            # 入力検証
+            if not isinstance(text, str):
+                raise ValueError("入力テキストは文字列である必要があります")
+            
+            if not text.strip():
+                logger.warning("空のテキストが入力されました")
+                return self._create_default_result("", "入力テキストが空です")
+            
+            # 前処理
+            text = self._preprocess(text)
+            logger.debug(f"前処理完了: {len(text)}文字のテキストを分析開始")
+            
+            # 形態素解析（利用可能な場合）
+            morphological_analysis = self._morphological_analyze(text)
+            
+            # 感情強度分析
+            emotion_intensity = self._analyze_emotion_intensity(text, morphological_analysis)
+            
+            # STAR各要素のスコア計算（形態素解析結果を活用）
+            scores = self._calculate_scores_enhanced(text, morphological_analysis)
+            
+            # 主分類の決定
+            primary_category = max(scores, key=scores.get)
+            
+            # 信頼度評価
+            confidence = self._calculate_confidence(scores, text)
+            
+            # 文型判定
+            sentence_type = self._determine_sentence_type(text)
+            
+            # キーワード抽出
+            keywords = self._extract_keywords(text)
+            
+            # 基本構造文パターン判定
+            structure_pattern = self._determine_structure_pattern(primary_category, sentence_type)
+            
+            # 感情変化の追跡
+            emotion_progression = self._track_emotion_progression(text)
+            
+            # 複合感情の検出
+            mixed_emotions = self._detect_mixed_emotions(text, scores)
+            
+            # 詳細分析
+            detailed_analysis = self._detailed_analysis(text, scores, keywords)
+            detailed_analysis['emotion_progression'] = emotion_progression
+            detailed_analysis['mixed_emotions'] = mixed_emotions
+            
+            # 短文・長文への対応強化
+            analysis_quality = self._assess_analysis_quality(text, scores, morphological_analysis)
+            detailed_analysis['analysis_quality'] = analysis_quality
+            
+            # 品詞タグ抽出
+            detected_pos_tags = []
+            if morphological_analysis:
+                detected_pos_tags = [item['pos'] for item in morphological_analysis if 'pos' in item]
+            
+            # 複数カテゴリ検出
+            is_multiple_categories, secondary_categories, ambiguity_score = self._detect_multiple_categories(scores)
         
-        # 形態素解析（利用可能な場合）
-        morphological_analysis = self._morphological_analyze(text)
+            # ログ出力（型安全）
+            try:
+                conf_value = float(confidence) if isinstance(confidence, (int, float, str)) else 0.0
+                logger.debug(f"分析完了: {primary_category} (信頼度: {conf_value:.2f})")
+            except (ValueError, TypeError):
+                logger.debug(f"分析完了: {primary_category} (信頼度: {confidence})")
+            return AnalysisResult(
+                text=text,
+                scores=scores,
+                primary_category=primary_category,
+                confidence=confidence,
+                sentence_type=sentence_type,
+                keywords=keywords,
+                structure_pattern=structure_pattern,
+                detailed_analysis=detailed_analysis,
+                morphological_analysis=morphological_analysis,
+                emotion_intensity=emotion_intensity,
+                detected_pos_tags=detected_pos_tags,
+                is_multiple_categories=is_multiple_categories,
+                secondary_categories=secondary_categories,
+                category_ambiguity_score=ambiguity_score
+            )
         
-        # 感情強度分析
-        emotion_intensity = self._analyze_emotion_intensity(text, morphological_analysis)
-        
-        # STAR各要素のスコア計算（形態素解析結果を活用）
-        scores = self._calculate_scores_enhanced(text, morphological_analysis)
-        
-        # 主分類の決定
-        primary_category = max(scores, key=scores.get)
-        
-        # 信頼度評価
-        confidence = self._calculate_confidence(scores, text)
-        
-        # 文型判定
-        sentence_type = self._determine_sentence_type(text)
-        
-        # キーワード抽出
-        keywords = self._extract_keywords(text)
-        
-        # 基本構造文パターン判定
-        structure_pattern = self._determine_structure_pattern(primary_category, sentence_type)
-        
-        # 感情変化の追跡
-        emotion_progression = self._track_emotion_progression(text)
-        
-        # 複合感情の検出
-        mixed_emotions = self._detect_mixed_emotions(text, scores)
-        
-        # 詳細分析
-        detailed_analysis = self._detailed_analysis(text, scores, keywords)
-        detailed_analysis['emotion_progression'] = emotion_progression
-        detailed_analysis['mixed_emotions'] = mixed_emotions
-        
-        # 短文・長文への対応強化
-        analysis_quality = self._assess_analysis_quality(text, scores, morphological_analysis)
-        detailed_analysis['analysis_quality'] = analysis_quality
-        
-        # 品詞タグ抽出
-        detected_pos_tags = []
-        if morphological_analysis:
-            detected_pos_tags = [item['pos'] for item in morphological_analysis if 'pos' in item]
-        
+        except ValueError as e:
+            logger.error(f"入力エラー: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"分析中に予期しないエラーが発生しました: {e}")
+            return self._create_default_result(text, f"分析エラー: {str(e)}")
+
+    def _create_default_result(self, text: str, error_message: str) -> AnalysisResult:
+        """エラー時のデフォルト結果を作成"""
+        default_scores = {'SENSE': 0.25, 'THINK': 0.25, 'ACT': 0.25, 'RELATE': 0.25}
         return AnalysisResult(
             text=text,
-            scores=scores,
-            primary_category=primary_category,
-            confidence=confidence,
-            sentence_type=sentence_type,
-            keywords=keywords,
-            structure_pattern=structure_pattern,
-            detailed_analysis=detailed_analysis,
-            morphological_analysis=morphological_analysis,
-            emotion_intensity=emotion_intensity,
-            detected_pos_tags=detected_pos_tags
+            scores=default_scores,
+            primary_category='SENSE',  # デフォルト
+            confidence=0.0,
+            sentence_type='不明',
+            keywords=[],
+            structure_pattern='エラー',
+            detailed_analysis={'error': error_message},
+            morphological_analysis=[],
+            emotion_intensity={'positive': 0.0, 'negative': 0.0, 'neutral': 1.0},
+            detected_pos_tags=[],
+            is_multiple_categories=False,
+            secondary_categories=[],
+            category_ambiguity_score=0.0
         )
+
+    def _detect_multiple_categories(self, scores: Dict[str, float]) -> Tuple[bool, List[str], float]:
+        """
+        複数カテゴリの可能性を検出
+        Returns:
+            (is_multiple, secondary_categories, ambiguity_score)
+        """
+        # スコアを降順でソート
+        sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        
+        if len(sorted_scores) < 2:
+            return False, [], 0.0
+        
+        primary_score = sorted_scores[0][1]
+        secondary_score = sorted_scores[1][1]
+        
+        # 設定から閾値を取得（なければデフォルト値）
+        try:
+            from config_manager import config_manager
+            ambiguity_threshold = config_manager.get_config('analysis.ambiguity_threshold', 0.15)
+        except:
+            ambiguity_threshold = 0.15  # デフォルト閾値
+        
+        # スコア差が小さい場合は複数カテゴリと判定
+        score_difference = primary_score - secondary_score
+        is_ambiguous = score_difference < ambiguity_threshold
+        
+        secondary_categories = []
+        ambiguity_score = 0.0
+        
+        if is_ambiguous:
+            # 主要カテゴリと近いスコアを持つカテゴリを収集
+            for category, score in sorted_scores[1:]:
+                if primary_score - score < ambiguity_threshold:
+                    secondary_categories.append(category)
+            
+            # 曖昧度スコア計算（0-1、1に近いほど曖昧）
+            ambiguity_score = 1.0 - (score_difference / ambiguity_threshold)
+            ambiguity_score = min(max(ambiguity_score, 0.0), 1.0)
+            
+            logger.debug(f"複数カテゴリ検出: 主要={sorted_scores[0][0]}, 次点={secondary_categories}, 曖昧度={ambiguity_score:.2f}")
+        
+        return is_ambiguous, secondary_categories, ambiguity_score
 
     def _preprocess(self, text: str) -> str:
         """テキストの前処理"""
@@ -279,31 +279,18 @@ class STARAnalyzer:
         return text
 
     def _calculate_scores(self, text: str) -> Dict[str, float]:
-        """STAR各要素のスコア計算（FEEL要素を考慮）"""
-        scores = {'SENSE': 0.0, 'THINK': 0.0, 'ACT': 0.0, 'RELATE': 0.0}
+        """STAR各要素のスコア計算（最適化版）"""
+        # 高速キーワード検索を使用
+        scores = self.keyword_optimizer.fast_search(text)
         
-        for category, keywords in self.keywords.items():
-            score = 0.0
-            
-            # 各カテゴリのキーワードをチェック
-            for word_type, word_list in keywords.items():
-                for word in word_list:
-                    if word in text:
-                        # 実感の形容表現は高い重み
-                        if word_type == 'feeling_expressions':
-                            base_score = 2.0
-                        else:
-                            base_score = 1.0
-                        
-                        # 強度修飾語による重み付け
-                        for intensity, multiplier in self.intensity_words.items():
-                            if intensity + word in text or word + intensity in text:
-                                base_score *= multiplier
-                                break
-                        
-                        score += base_score
-            
-            scores[category] = score
+        # 強度修飾語による重み付け（後処理として適用）
+        for intensity, multiplier in self.intensity_words.items():
+            if intensity in text:
+                # 強度修飾語が見つかった場合、全スコアを調整
+                for category in scores:
+                    if scores[category] > 0:
+                        scores[category] *= multiplier
+                break
         
         # FEEL要素（感情の高ぶり）のボーナス
         feel_score = self._calculate_feel_score(text)
@@ -317,6 +304,14 @@ class STARAnalyzer:
             scores = {k: v / total_score for k, v in scores.items()}
         
         return scores
+    
+    def benchmark_performance(self, text: str, iterations: int = 1000) -> Dict[str, float]:
+        """パフォーマンスベンチマーク"""
+        return self.keyword_optimizer.benchmark_search(text, iterations)
+    
+    def get_detailed_matches(self, text: str) -> Dict[str, List[str]]:
+        """マッチしたキーワードの詳細情報を取得"""
+        return self.keyword_optimizer.get_keyword_matches(text)
     
     def _count_keywords_in_text(self, text: str) -> int:
         """テキスト内のキーワード数カウント"""

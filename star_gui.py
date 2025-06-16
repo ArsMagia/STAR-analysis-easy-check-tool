@@ -14,7 +14,11 @@ import numpy as np
 from star_analyzer import STARAnalyzer
 import matplotlib
 import platform
+from logger_config import get_logger
 matplotlib.use('TkAgg')  # GUIバックエンドを使用
+
+# ロガー初期化
+logger = get_logger('gui')
 
 # 日本語フォント設定
 import matplotlib.font_manager as fm
@@ -31,14 +35,14 @@ def setup_japanese_font():
                 fig, ax = plt.subplots(figsize=(1, 1))
                 ax.text(0.5, 0.5, 'テスト', ha='center', va='center')
                 plt.close(fig)
-                pass  # 日本語フォント設定完了
+                logger.debug(f"日本語フォント設定完了: {font_name}")
                 break
             except:
                 continue
         else:
             # フォールバック設定
             plt.rcParams['font.family'] = 'DejaVu Sans'
-            pass  # 日本語フォントフォールバック
+            logger.warning("日本語フォントが見つからないため、英語フォントを使用します")
     else:
         # Linux/Mac環境での設定
         plt.rcParams['font.family'] = 'DejaVu Sans'
@@ -175,14 +179,14 @@ class STARAnalysisGUI:
                 for font in font_candidates:
                     if font in available_fonts:
                         self.font_family = font
-                        pass  # 日本語フォントを設定
+                        logger.debug(f"日本語フォントを設定: {font}")
                         break
                 
             except Exception as e:
-                pass  # フォント設定エラー
+                logger.error(f"フォント設定エラー: {e}")
                 self.font_family = "Arial"
         
-        pass  # 使用フォント設定完了
+        logger.info(f"使用フォント: {self.font_family}")
     
     def get_safe_font(self, size=9, weight='normal'):
         """安全なフォント指定を返すヘルパーメソッド"""
@@ -413,7 +417,8 @@ class STARAnalysisGUI:
         # 主要カテゴリ表示（サイズ縮小）
         self.main_category_label = tk.Label(result_card, text="分析結果がここに表示されます", 
                                           font=self.get_safe_font(13, 'bold'), 
-                                          bg=theme['input_bg'], fg=theme['input_fg'])
+                                          bg=theme['input_bg'], fg=theme['input_fg'],
+                                          wraplength=380, justify=tk.CENTER)
         self.main_category_label.pack(pady=8)
         
         # 信頼度表示
@@ -421,6 +426,13 @@ class STARAnalysisGUI:
                                        font=self.get_safe_font(12), 
                                        bg=theme['input_bg'], fg=theme['input_fg'])
         self.confidence_label.pack(pady=(0, 8))
+        
+        # 複数カテゴリ警告ラベル（赤文字で表示）
+        self.multiple_categories_label = tk.Label(result_card, text="", 
+                                               font=self.get_safe_font(10), 
+                                               bg=theme['input_bg'], fg='#FF4444',
+                                               wraplength=380)
+        self.multiple_categories_label.pack(pady=(0, 5))
         
         # スコアバー表示（コンパクト）
         theme = self.themes[self.current_theme]
@@ -634,7 +646,7 @@ class STARAnalysisGUI:
             absolute_path = os.path.abspath(filepath)
             
             # CUIにログ出力（C:からの絶対パス）
-            pass  # エクスポート完了
+            logger.info(f"STAR分析結果エクスポート完了 - 保存先: {absolute_path}")
             
             # エクスポート先表示ラベルを更新
             self.export_status_label.config(text=f"出力先: {filepath}")
@@ -642,7 +654,7 @@ class STARAnalysisGUI:
             messagebox.showinfo("エクスポート完了", f"結果を {filepath} に保存しました。")
         except Exception as e:
             # エラー時もCUIにログ出力
-            pass  # エクスポートエラー
+            logger.error(f"STAR分析結果エクスポートエラー: {e}")
             messagebox.showerror("エクスポートエラー", f"エクスポートに失敗しました: {e}")
     
     def setup_plot_canvas(self, parent):
@@ -701,8 +713,12 @@ class STARAnalysisGUI:
             self.update_details_section(result)
             self.update_charts_section(result)
             
+        except ValueError as e:
+            logger.error(f"入力エラー: {e}")
+            messagebox.showerror("入力エラー", f"入力に問題があります：\n{str(e)}\n\n有効な日本語テキストを入力してください。")
         except Exception as e:
-            messagebox.showerror("エラー", f"分析中にエラーが発生しました：\n{str(e)}")
+            logger.error(f"分析処理エラー: {e}")
+            messagebox.showerror("分析エラー", f"分析中に予期しないエラーが発生しました：\n{str(e)}\n\nアプリケーションログを確認してください。")
     
     def check_analysis_quality(self, result):
         """分析品質チェックと改善提案"""
@@ -888,8 +904,15 @@ class STARAnalysisGUI:
             'SENSE': '🎨', 'THINK': '💡', 'ACT': '🎯', 'RELATE': '🤝'
         }
         emoji = category_emoji.get(result.primary_category, '🎯')
+        
+        # 複数カテゴリの可能性をチェック
+        main_text = f"{emoji} {result.primary_category} + FEEL"
+        if hasattr(result, 'is_multiple_categories') and result.is_multiple_categories:
+            secondary_text = "・".join(result.secondary_categories)
+            main_text += f"\n(他の可能性: {secondary_text})"
+        
         self.main_category_label.config(
-            text=f"{emoji} {result.primary_category} + FEEL",
+            text=main_text,
             fg=self.themes[self.current_theme]['accent']
         )
         
@@ -904,6 +927,15 @@ class STARAnalysisGUI:
             confidence_text += f" (差: {score_diff:.2f}, キーワード: {keyword_count}個)"
             
         self.confidence_label.config(text=confidence_text)
+        
+        # 複数カテゴリ警告表示
+        if hasattr(result, 'is_multiple_categories') and result.is_multiple_categories:
+            secondary_categories = "・".join(result.secondary_categories)
+            ambiguity_percent = int(result.category_ambiguity_score * 100)
+            warning_text = f"⚠️ 複数カテゴリの可能性があります (曖昧度: {ambiguity_percent}%)\n候補: {secondary_categories}"
+            self.multiple_categories_label.config(text=warning_text)
+        else:
+            self.multiple_categories_label.config(text="")
         
         # 一言解説
         self.quick_explanation.config(state=tk.NORMAL)
@@ -1373,9 +1405,9 @@ def main():
         app = STARAnalysisGUI(root)
         root.mainloop()
     except KeyboardInterrupt:
-        pass  # アプリケーション中断
+        logger.info("アプリケーションがユーザーによって中断されました")
     except Exception as e:
-        pass  # アプリケーションエラー
+        logger.error(f"アプリケーションエラー: {e}")
     finally:
         # 確実にPythonプロセスを終了
         try:

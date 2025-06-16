@@ -1,0 +1,103 @@
+2025-06-16 16:29:26 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:29:26 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 16:29:26 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 16:32:59 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:32:59 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 16:32:59 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 16:32:59 - star_analyzer - ERROR - 入力エラー: Unknown format code 'f' for object of type 'str'
+2025-06-16 16:33:23 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:33:23 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 16:33:23 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 16:33:23 - star_analyzer - ERROR - 入力エラー: could not convert string to float: '高'
+2025-06-16 16:33:41 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:33:41 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 16:33:41 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 16:33:41 - star_analyzer - WARNING - 空のテキストが入力されました
+2025-06-16 16:33:41 - star_analyzer - ERROR - 入力エラー: 入力テキストは文字列である必要があります
+2025-06-16 16:35:05 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:35:05 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 16:35:05 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 16:35:05 - star_analyzer - ERROR - 入力エラー: 入力テキストは文字列である必要があります
+2025-06-16 16:35:05 - star_analyzer - WARNING - 空のテキストが入力されました
+2025-06-16 16:41:09 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:41:09 - star_analyzer - INFO - Janome形態素解析エンジンを使用します
+2025-06-16 16:41:09 - star_gui - INFO - 使用フォント: Yu Gothic UI
+2025-06-16 16:44:22 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:44:22 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 16:44:22 - optimizer - INFO - キーワードインデックス構築完了: 236語
+2025-06-16 16:44:22 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 16:44:22 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 16:49:31 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:49:31 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 16:49:31 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 16:49:31 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 16:49:31 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 16:49:31 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 16:49:31 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 16:52:18 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:52:18 - gui_optimizer - WARNING - matplotlib が利用できません。GUI最適化機能は制限されます。
+2025-06-16 16:52:18 - gui_optimizer - INFO - プロットキャッシュシステム初期化: 最大10件
+2025-06-16 16:57:39 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 16:57:39 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 16:57:39 - star_analyzer - INFO - Janome形態素解析エンジンを使用します
+2025-06-16 16:57:39 - star_gui - INFO - 使用フォント: Yu Gothic UI
+2025-06-16 16:57:39 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 16:57:39 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 16:57:39 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 17:04:43 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 17:04:43 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 17:04:43 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 17:04:43 - test - INFO - ログシステム正常
+2025-06-16 17:04:43 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 17:04:43 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 17:04:43 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 17:04:43 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 17:06:11 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 17:06:11 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 17:06:11 - star_analyzer - INFO - Janome形態素解析エンジンを使用します
+2025-06-16 17:06:11 - star_gui - INFO - 使用フォント: Yu Gothic UI
+2025-06-16 17:06:11 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 17:06:11 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 17:06:11 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 17:13:35 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 17:13:35 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 17:13:35 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 17:13:35 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 17:13:35 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 17:13:35 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 17:13:35 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 17:15:45 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 17:15:45 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 17:15:45 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 17:15:45 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 17:15:45 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 17:15:45 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 17:15:45 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 17:16:38 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 17:16:38 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 17:16:38 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 17:16:38 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 17:16:38 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 17:16:38 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 17:16:38 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 17:17:47 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 17:17:47 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 17:17:47 - star_analyzer - INFO - Janome形態素解析エンジンを使用します
+2025-06-16 17:17:47 - star_gui - INFO - 使用フォント: Yu Gothic UI
+2025-06-16 17:17:47 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 17:17:47 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 17:17:47 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 17:20:30 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 17:20:30 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 17:20:30 - star_analyzer - WARNING - Janomeが利用できません。基本分析機能のみ使用します。推奨: pip install janome
+2025-06-16 17:20:30 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 17:20:30 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 17:20:30 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました
+2025-06-16 17:20:30 - star_analyzer - INFO - 基本分析モードで動作します
+2025-06-16 18:06:55 - star_analyzer - INFO - ロギングシステム初期化完了
+2025-06-16 18:06:55 - config - INFO - 設定ファイルの読み込みが完了しました
+2025-06-16 18:06:55 - star_analyzer - INFO - Janome形態素解析エンジンを使用します
+2025-06-16 18:06:55 - star_gui - INFO - 使用フォント: Yu Gothic UI
+2025-06-16 18:06:55 - star_analyzer - INFO - 設定を外部ファイルから読み込み完了: 4カテゴリ
+2025-06-16 18:06:55 - optimizer - INFO - キーワードインデックス構築完了: 317語
+2025-06-16 18:06:55 - star_analyzer - INFO - キーワード検索最適化エンジンを初期化しました

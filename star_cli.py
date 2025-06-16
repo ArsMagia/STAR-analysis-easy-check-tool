@@ -7,12 +7,17 @@ STAR分析 コマンドライン版
 
 import sys
 from star_analyzer import STARAnalyzer
+from logger_config import get_logger
+
+# ロガー初期化
+logger = get_logger('cli')
 
 class STARAnalysisCLI:
     """STAR分析コマンドラインインターフェース"""
     
     def __init__(self):
         self.analyzer = STARAnalyzer()
+        logger.info("STAR分析CLIアプリケーションを初期化しました")
         self.sample_texts = [
             "この料理、本当においしい！素晴らしい味でした。",
             "やっと数学の問題が解けた！理解できて嬉しい。",

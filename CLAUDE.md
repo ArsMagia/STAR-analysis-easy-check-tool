@@ -53,6 +53,39 @@ result = analyzer.analyze('この料理、本当においしい！')
 print(f'Primary category: {result.primary_category}')
 print(f'Scores: {result.scores}')
 "
+
+# Run comprehensive performance tests
+python test_analyzers_comparison.py
+
+# Test both analyzers with sample data
+python -c "
+from star_analyzer import STARAnalyzer
+analyzer = STARAnalyzer()
+test_texts = [
+    'この料理、本当においしい！',
+    'やっと数学の問題が解けた！',
+    'マラソンを完走できて嬉しい',
+    '友達が励ましてくれて感謝している'
+]
+for text in test_texts:
+    result = analyzer.analyze(text)
+    print(f'{text} → {result.primary_category} ({result.confidence:.2f})')
+"
+```
+
+### Debugging and Development Tools
+```bash
+# Check analyzer engine status
+python -c "from star_analyzer import MORPHOLOGICAL_ANALYZER, ANALYZER_TYPE; print(f'Engine: {MORPHOLOGICAL_ANALYZER}, Type: {ANALYZER_TYPE}')"
+
+# Windows setup scripts (run from Windows)
+install_janome.bat              # Install Janome with fallback methods
+setup_modern_analyzer.bat       # Complete system setup
+create_debug_shortcut.vbs       # Create desktop debug shortcut
+
+# Alternative Janome installation methods
+pip install janome             # Direct installation
+python -m pip install janome   # Alternative method
 ```
 
 ### 形態素解析エンジンについて
@@ -82,6 +115,14 @@ install_janome.bat  # Windows用
 - 両モードでSTAR分析の基本機能は完全動作
 
 ## Architecture Overview
+
+### Key Files Quick Reference
+- **Core Engine**: `star_analyzer.py` - Main STAR classification logic
+- **GUI App**: `star_gui.py` - tkinter-based interface with charts
+- **CLI App**: `star_cli.py` - Command-line interactive interface  
+- **Tests**: `test_analyzers_comparison.py` - Performance and accuracy testing
+- **Theory Docs**: `STAR分析フレームワーク.md`, `感動のStar分析とはなにか.md` - Core theory references
+- **Dependencies**: `requirements.txt` - matplotlib, numpy, janome
 
 The system consists of three main components:
 

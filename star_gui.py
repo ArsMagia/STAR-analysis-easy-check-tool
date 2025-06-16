@@ -31,14 +31,14 @@ def setup_japanese_font():
                 fig, ax = plt.subplots(figsize=(1, 1))
                 ax.text(0.5, 0.5, 'テスト', ha='center', va='center')
                 plt.close(fig)
-                print(f"日本語フォント設定完了: {font_name}")
+                pass  # 日本語フォント設定完了
                 break
             except:
                 continue
         else:
             # フォールバック設定
             plt.rcParams['font.family'] = 'DejaVu Sans'
-            print("警告: 日本語フォントが見つからないため、英語フォントを使用します")
+            pass  # 日本語フォントフォールバック
     else:
         # Linux/Mac環境での設定
         plt.rcParams['font.family'] = 'DejaVu Sans'
@@ -175,14 +175,14 @@ class STARAnalysisGUI:
                 for font in font_candidates:
                     if font in available_fonts:
                         self.font_family = font
-                        print(f"日本語フォントを設定: {font}")
+                        pass  # 日本語フォントを設定
                         break
                 
             except Exception as e:
-                print(f"フォント設定エラー: {e}")
+                pass  # フォント設定エラー
                 self.font_family = "Arial"
         
-        print(f"使用フォント: {self.font_family}")
+        pass  # 使用フォント設定完了
     
     def get_safe_font(self, size=9, weight='normal'):
         """安全なフォント指定を返すヘルパーメソッド"""
@@ -296,8 +296,8 @@ class STARAnalysisGUI:
             font_config = self.get_safe_font(12)
             if isinstance(font_config, tuple):
                 self.text_input.configure(font=font_config)
-        except:
-            pass
+        except Exception:
+            pass  # フォント設定エラーをスキップ
         
         # プレースホルダーテキスト（灰色で表示）
         placeholder_text = "例: この料理、本当においしい！素晴らしい味でした。"
@@ -634,9 +634,7 @@ class STARAnalysisGUI:
             absolute_path = os.path.abspath(filepath)
             
             # CUIにログ出力（C:からの絶対パス）
-            print(f"\n✨ STAR分析結果エクスポート完了")
-            print(f"📁 保存先: {absolute_path}")
-            print(f"📄 ファイル名: {filename}")
+            pass  # エクスポート完了
             
             # エクスポート先表示ラベルを更新
             self.export_status_label.config(text=f"出力先: {filepath}")
@@ -644,8 +642,7 @@ class STARAnalysisGUI:
             messagebox.showinfo("エクスポート完了", f"結果を {filepath} に保存しました。")
         except Exception as e:
             # エラー時もCUIにログ出力
-            print(f"\n❌ STAR分析結果エクスポートエラー")
-            print(f"🚨 エラー内容: {e}")
+            pass  # エクスポートエラー
             messagebox.showerror("エクスポートエラー", f"エクスポートに失敗しました: {e}")
     
     def setup_plot_canvas(self, parent):
@@ -1376,9 +1373,9 @@ def main():
         app = STARAnalysisGUI(root)
         root.mainloop()
     except KeyboardInterrupt:
-        print("\nアプリケーションが中断されました。")
+        pass  # アプリケーション中断
     except Exception as e:
-        print(f"エラーが発生しました: {e}")
+        pass  # アプリケーションエラー
     finally:
         # 確実にPythonプロセスを終了
         try:

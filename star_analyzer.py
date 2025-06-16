@@ -6,9 +6,7 @@ STAR分析エンジン
 """
 
 import re
-import json
 import platform
-import os
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
@@ -21,11 +19,10 @@ try:
     from janome.tokenizer import Tokenizer
     MORPHOLOGICAL_ANALYZER = "janome"
     ANALYZER_TYPE = "modern"
-    print("✅ Janome形態素解析を使用します")
+    pass  # Janome形態素解析を使用
 except ImportError:
     ANALYZER_TYPE = "basic"
-    print("注意: Janomeが利用できません。基本分析機能のみ使用します。")
-    print("推奨: pip install janome でインストールしてください。")
+    pass  # 基本分析機能のみ使用
 
 @dataclass
 class AnalysisResult:
@@ -58,7 +55,7 @@ class STARAnalyzer:
             self.morphological_analyzer = self._initialize_janome()
         else:
             self.morphological_analyzer = None
-            print("基本分析機能のみ使用します")
+            pass  # 基本分析機能のみ使用
     
     def _initialize_janome(self):
         """Janome形態素解析器の初期化"""
@@ -67,13 +64,13 @@ class STARAnalyzer:
             # 簡単なテスト実行
             test_result = list(tokenizer.tokenize("テスト", wakati=True))
             if test_result:
-                print("Janome初期化成功 - 高精度分析が利用可能です")
+                pass  # Janome初期化成功
                 return tokenizer
             else:
-                print("Janome初期化失敗: テスト解析が失敗")
+                pass  # Janome初期化失敗
                 return None
         except Exception as e:
-            print(f"Janome初期化エラー: {e}")
+            pass  # Janome初期化エラー
             return None
     
     def _setup_keywords_and_config(self):
